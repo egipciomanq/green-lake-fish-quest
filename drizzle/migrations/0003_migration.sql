@@ -1,0 +1,1 @@
+update public.app_settings set referral_percent = 10, referral_bonus_coins = 0 where id = 1;

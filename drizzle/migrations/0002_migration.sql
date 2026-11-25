@@ -1,0 +1,2 @@
+alter table public.app_settings add column daily_coin_cap int not null default 340, add column min_account_days int not null default 3;
+update public.app_settings set coins_per_usd = 10000, min_withdraw_coins = 1000, coins_common = 2, coins_rare = 5, coins_epic = 15, coins_legendary = 40 where id = 1;
