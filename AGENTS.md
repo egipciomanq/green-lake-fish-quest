@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Game rules live in src/game/fishing.ts (no React/three) and per-frame 3D state stays in refs inside src/game/LakeScene.tsx; React state only holds phase/UI. Why: keeps sim testable and avoids 60fps re-renders.
+- Gameplay balances are development data persisted in localStorage (src/game/store.ts), always labelled as preview, never as real money. Why: user requirement for Phase 1.
