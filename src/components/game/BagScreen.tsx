@@ -39,7 +39,7 @@ export function BagScreen({ save, update, onReset }: { save: Save; update: (fn: 
       <div className="space-y-2">
         {BAITS.map((b) => (
           <div key={b.id} className="panel flex items-center gap-3 p-2.5">
-            <img src={art(b.art)} alt={b.name} className="h-12 w-12 rounded-xl object-cover" />
+            <img src={art(b.art)} alt={b.name} className="h-12 w-12 object-contain drop-shadow-md" />
             <div className="flex-1"><div className="font-bold">{b.name}</div><div className="text-xs text-muted-foreground">{b.desc}</div></div>
             <div className="font-display text-2xl text-primary">×{save.baits[b.id] ?? 0}</div>
           </div>
@@ -90,7 +90,7 @@ function ChestOpening({ tier, onDone, onCancel }: { tier: ChestTier; onDone: (l:
             <div className={`mt-4 grid gap-2 ${loot.length > 3 ? "grid-cols-2" : "grid-cols-3"}`} style={{ perspective: 600 }}>
               {loot.map((x, i) => { const b = BAITS.find((y) => y.id === x.baitId)!; const glow = ["common", "rare", "epic", "legendary"][b.boost]; return (
                 <div key={i} className={`panel animate-flip-in p-2 glow-${glow}`} style={{ animationDelay: `${450 + i * 220}ms` }}>
-                  <img src={art(b.art)} alt={b.name} className="mx-auto h-14 w-14 rounded-xl object-cover" />
+                  <img src={art(b.art)} alt={b.name} className="mx-auto h-14 w-14 object-contain drop-shadow-lg" />
                   <div className="mt-1 text-[11px] font-bold">{b.name}</div><div className="font-display text-xl text-primary">×{x.qty}</div>
                 </div>); })}
             </div>

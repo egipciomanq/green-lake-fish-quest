@@ -31,7 +31,7 @@ export function Reveal({ r, onCollect }: { r: RevealData; onCollect: () => void 
           <span className={`inline-block rounded-full px-4 py-0.5 font-display text-base text-background ${RARITY_BG[r.fish.rarity]}`}>{RARITY_LABEL[r.fish.rarity]}</span>
           <div className="relative mx-auto my-3 grid h-44 place-items-center">
             <div className={`absolute inset-6 rounded-full blur-2xl opacity-70 ${RARITY_BG[r.fish.rarity]}`} />
-            <img src={art(r.fish.art)} alt={r.fish.name} className="animate-bob relative max-h-44 rounded-2xl object-contain" />
+            <img src={art(r.fish.art)} alt={r.fish.name} className="animate-bob relative max-h-48 object-contain drop-shadow-2xl" />
           </div>
           <h2 className="font-display text-3xl text-stroke">{r.fish.name}</h2>
           <p className="mt-1 font-bold text-muted-foreground">{r.kg} كغ {r.record && <span className="text-primary">• رقم قياسي جديد!</span>}</p>

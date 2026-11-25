@@ -182,7 +182,7 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
           <div className="pointer-events-auto flex max-w-full gap-2 overflow-x-auto pb-1" onPointerDown={(e) => e.stopPropagation()}>
             {BAITS.map((b) => (
               <button key={b.id} onClick={() => { sfx.tap(); setBait(b.id); }} className={`panel relative flex shrink-0 flex-col items-center p-1 ${bait === b.id ? "ring-4 ring-primary" : "opacity-80"}`}>
-                <img src={art(b.art)} alt={b.name} className="h-11 w-11 rounded-xl object-cover" />
+                <img src={art(b.art)} alt={b.name} className="h-11 w-11 object-contain drop-shadow-md" />
                 <span className="absolute -top-2 end-0 rounded-full bg-primary px-1.5 text-[11px] font-black text-primary-foreground">{save.baits[b.id] ?? 0}</span>
                 <span className="mt-0.5 w-16 truncate text-center text-[10px] font-bold">{b.name}</span>
               </button>

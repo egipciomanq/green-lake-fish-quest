@@ -36,7 +36,7 @@ export function WorldsScreen({ save, update, onPlay }: { save: Save; update: (fn
               <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 to-transparent p-2 pt-8">
                 <div className="text-[11px] font-bold text-muted-foreground">{w.desc}</div>
                 <div className="mt-1 flex -space-x-2 space-x-reverse">
-                  {w.fish.slice(0, 5).map((f) => <img key={f.id} src={art(f.art)} alt="" className="h-6 w-6 rounded-full border border-border object-cover" />)}
+                  {w.fish.slice(0, 5).map((f) => <img key={f.id} src={art(f.art)} alt="" className="h-7 w-7 rounded-full border border-border bg-muted object-contain p-0.5" />)}
                 </div>
               </div>
               {!open && <div className="absolute inset-0 grid place-items-center"><div className="panel grid place-items-center px-3 py-2 text-center"><Lock className="h-6 w-6 text-primary" /><div className="text-xs font-bold">المستوى {w.unlockLevel}</div></div></div>}
@@ -84,7 +84,7 @@ export function LoadingScreen({ ready, onStart }: { ready: boolean; onStart: () 
   return (
     <div className="no-select absolute inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-deep px-8">
       <div className="bg-rays animate-rays pointer-events-none absolute left-1/2 top-[35%] h-[150vmax] w-[150vmax]" />
-      <img src={art("logo")} alt="Fishing World" className="animate-pop relative w-72 max-w-full rounded-3xl drop-shadow-2xl" />
+      <img src={art("logo")} alt="Fishing World" className="animate-pop relative w-72 max-w-full drop-shadow-2xl" />
       <div className="relative w-full max-w-xs">
         {ready ? (
           <button onClick={onStart} className="btn-green animate-pop w-full py-3.5 text-3xl">بدء الصيد</button>

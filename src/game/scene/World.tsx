@@ -117,11 +117,57 @@ function Coral({ c }: { c: string }) {
   return <>{[0, 1, 2, 3].map((i) => <mesh key={i} position={[Math.sin(i * 2) * 0.3, 0.4 + i * 0.1, Math.cos(i * 2) * 0.3]} rotation-z={Math.sin(i) * 0.5}><cylinderGeometry args={[0.06, 0.12, 0.9 + i * 0.2, 6]} /><meshStandardMaterial color={c} emissive={c} emissiveIntensity={0.25} /></mesh>)}</>;
 }
 function Tower() {
+  // Stone tower with crenellations, banded roof, glowing windows and a flag.
+  const flag = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }) => { if (flag.current) flag.current.rotation.y = Math.sin(clock.elapsedTime * 3) * 0.35; });
   return <>
-    <mesh position={[0, 2, 0]} castShadow><cylinderGeometry args={[0.7, 0.8, 4, 12]} /><meshStandardMaterial color="#f0d48a" metalness={0.4} roughness={0.4} /></mesh>
-    <mesh position={[0, 4.7, 0]} castShadow><coneGeometry args={[0.95, 1.6, 12]} /><meshStandardMaterial color="#e8b030" metalness={0.8} roughness={0.25} /></mesh>
-    <mesh position={[0, 5.7, 0]}><sphereGeometry args={[0.15, 8, 8]} /><meshStandardMaterial color="#ffe08a" emissive="#ffc030" emissiveIntensity={1} /></mesh>
+    <mesh position={[0, 2, 0]} castShadow><cylinderGeometry args={[0.72, 0.85, 4, 14]} /><meshStandardMaterial color="#efe2c0" roughness={0.75} /></mesh>
+    <mesh position={[0, 0.25, 0]}><cylinderGeometry args={[0.95, 1, 0.5, 14]} /><meshStandardMaterial color="#cbb98f" roughness={0.9} /></mesh>
+    {Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2; return <mesh key={i} position={[Math.cos(a) * 0.8, 4.15, Math.sin(a) * 0.8]} castShadow><boxGeometry args={[0.28, 0.35, 0.28]} /><meshStandardMaterial color="#f5ead0" /></mesh>; })}
+    {[1.4, 2.6].map((y) => [0, 2.1, 4.2].map((a, j) => <mesh key={y + "-" + j} position={[Math.sin(a) * 0.8, y, Math.cos(a) * 0.8]} rotation-y={a}><boxGeometry args={[0.2, 0.4, 0.06]} /><meshStandardMaterial color="#ffd77a" emissive="#ffb030" emissiveIntensity={1.2} /></mesh>))}
+    <mesh position={[0, 5.05, 0]} castShadow><coneGeometry args={[1, 1.8, 14]} /><meshStandardMaterial color="#3a6ad0" metalness={0.3} roughness={0.35} /></mesh>
+    <mesh position={[0, 4.35, 0]}><torusGeometry args={[0.88, 0.06, 6, 20]} /><meshStandardMaterial color="#e8b030" metalness={0.9} roughness={0.2} /></mesh>
+    <mesh position={[0, 6.3, 0]}><cylinderGeometry args={[0.03, 0.03, 0.9, 6]} /><meshStandardMaterial color="#e8b030" metalness={0.9} /></mesh>
+    <mesh ref={flag} position={[0, 6.55, 0.28]}><boxGeometry args={[0.02, 0.3, 0.55]} /><meshStandardMaterial color="#e83a3a" /></mesh>
   </>;
+}
+
+/** Cozy fisherman's cabin with chimney smoke, lantern and boat. */
+function Cabin() {
+  const smoke = useRef<THREE.Group>(null);
+  useFrame((_, d) => smoke.current?.children.forEach((c, i) => { c.position.y += Math.min(d, 0.05) * 0.5; const t = c.position.y; if (t > 2.4) c.position.y = 0; c.scale.setScalar(0.25 + t * 0.25); ((c as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = 0.5 * (1 - t / 2.4); void i; }));
+  const wood = useMemo(woodTex, []);
+  return <group>
+    <mesh position={[0, 0.2, 0]} receiveShadow><boxGeometry args={[3.4, 0.4, 2.8]} /><meshStandardMaterial color="#6a6a66" roughness={1} flatShading /></mesh>
+    <mesh position={[0, 1.3, 0]} castShadow><boxGeometry args={[3, 1.8, 2.4]} /><meshStandardMaterial map={wood} color="#b07a48" roughness={0.9} /></mesh>
+    {[-1, 1].map((s) => <mesh key={s} position={[0, 2.75, s * 0.68]} rotation-x={s * 0.75} castShadow><boxGeometry args={[3.4, 0.12, 1.85]} /><meshStandardMaterial color="#b0402a" roughness={0.7} /></mesh>)}
+    <mesh position={[0, 2.6, 0]} rotation-x={Math.PI / 4}><boxGeometry args={[3, 1.15, 1.15]} /><meshStandardMaterial map={wood} color="#9a6a3a" /></mesh>
+    <mesh position={[0.9, 3.1, -0.4]} castShadow><boxGeometry args={[0.4, 1.1, 0.4]} /><meshStandardMaterial color="#8a7a70" flatShading /></mesh>
+    <group ref={smoke} position={[0.9, 3.7, -0.4]}>{[0, 0.8, 1.6].map((y, i) => <mesh key={i} position={[0, y, 0]}><sphereGeometry args={[0.4, 8, 6]} /><meshBasicMaterial color="#e8e8ee" transparent opacity={0.4} depthWrite={false} /></mesh>)}</group>
+    <mesh position={[0, 1.05, 1.21]}><boxGeometry args={[0.7, 1.3, 0.05]} /><meshStandardMaterial color="#5a3420" /></mesh>
+    {[-0.95, 0.95].map((x) => <group key={x} position={[x, 1.5, 1.21]}>
+      <mesh><boxGeometry args={[0.6, 0.55, 0.04]} /><meshStandardMaterial color="#ffd98a" emissive="#ffb040" emissiveIntensity={1} /></mesh>
+      <mesh position={[0, 0, 0.02]}><boxGeometry args={[0.66, 0.06, 0.04]} /><meshStandardMaterial color="#f4ead8" /></mesh>
+      <mesh position={[0, 0, 0.02]}><boxGeometry args={[0.06, 0.6, 0.04]} /><meshStandardMaterial color="#f4ead8" /></mesh>
+      <mesh position={[0, -0.36, 0.1]}><boxGeometry args={[0.7, 0.16, 0.2]} /><meshStandardMaterial color="#4a8a3a" /></mesh>
+      {[-0.2, 0, 0.2].map((f) => <mesh key={f} position={[f, -0.24, 0.12]}><sphereGeometry args={[0.07, 6, 6]} /><meshStandardMaterial color={f ? "#ff6a8a" : "#ffd03a"} /></mesh>)}
+    </group>)}
+    <mesh position={[0.6, 1.95, 1.35]}><sphereGeometry args={[0.1, 8, 8]} /><meshStandardMaterial color="#ffe0a0" emissive="#ffb030" emissiveIntensity={2} /></mesh>
+    <pointLight position={[0.6, 1.9, 1.7]} color="#ffb85a" intensity={4} distance={6} />
+    <group position={[2.6, 0.25, 1.8]} rotation-y={0.5}>
+      <mesh scale={[0.6, 0.35, 1.8]}><sphereGeometry args={[1, 12, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]} /><meshStandardMaterial color="#d84a3a" side={THREE.DoubleSide} /></mesh>
+      <mesh position={[0, 0.02, 0]} rotation-x={-Math.PI / 2} scale={[0.55, 1.7, 1]}><circleGeometry args={[1, 16]} /><meshStandardMaterial map={wood} color="#c09060" /></mesh>
+    </group>
+  </group>;
+}
+
+/** Floating lantern buoys for magical worlds. */
+function Lanterns({ color }: { color: string }) {
+  const g = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => g.current?.children.forEach((c, i) => { c.position.y = 2 + Math.sin(clock.elapsedTime * 0.8 + i) * 0.4; }));
+  return <group ref={g}>{Array.from({ length: 8 }, (_, i) => (
+    <mesh key={i} position={[-10 + i * 2.8, 2, -10 - (i % 3) * 4]}><octahedronGeometry args={[0.25, 0]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.5} /></mesh>
+  ))}</group>;
 }
 
 /** Mountains in the distance. */
@@ -188,6 +234,8 @@ export function Surroundings({ theme }: { theme: WorldTheme }) {
       {theme.outdoor && f !== "lava" && <Mountains theme={theme} />}
       {f === "lava" && <Volcano />}
       {f === "jungle" && <Waterfall position={[-9, 0, -20]} />}
+      {(f === "pine" || f === "golden" || f === "ice") && <group position={[-8.5, 0, -9]} rotation-y={0.55} scale={0.9}><Cabin /></group>}
+      {(f === "crystal" || f === "cave" || f === "castle") && <Lanterns color={theme.accent} />}
       {f === "castle" && <group position={[0, 0, -30]} scale={2.2}><Tower /><group position={[-2.2, 0, 0.5]} scale={0.7}><Tower /></group><group position={[2.2, 0, 0.5]} scale={0.7}><Tower /></group></group>}
       {!theme.outdoor && f !== "lava" && (
         <group>
