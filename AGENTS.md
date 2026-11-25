@@ -29,5 +29,7 @@ use the editor.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
 
-- Game rules live in src/game/fishing.ts (no React/three) and per-frame 3D state stays in refs inside src/game/LakeScene.tsx; React state only holds phase/UI. Why: keeps sim testable and avoids 60fps re-renders.
+- Game rules live in src/game/fishing.ts (no React/three, tested in fishing.test.ts); UI writes a shared mutable `Live` object (src/game/live.ts) that scene components in src/game/scene/ read each frame; React state only holds phase/UI. Dev builds expose it as window.__live for scripted playtests. Why: testable sim, no 60fps re-renders.
+- World look, fish lists and unlock levels are data in src/game/data.ts (WorldTheme drives the scene); 2D art comes from the user's reference sheet via src/game/art.ts CDN pointers. Why: one place to add or retune worlds.
+- Sound is synthesized WebAudio in src/game/sfx.ts; Telegram Mini App hooks (ready/expand/haptics) live in src/game/telegram.ts and are no-ops in a browser. Why: no audio files, works inside and outside Telegram.
 - Gameplay balances are development data persisted in localStorage (src/game/store.ts), always labelled as preview, never as real money. Why: user requirement for Phase 1.
