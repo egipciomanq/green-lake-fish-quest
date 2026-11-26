@@ -139,6 +139,7 @@ export type Database = {
           id: string
           last_ad_at: string | null
           last_catch_at: string | null
+          last_catch_result: Json | null
           level: number
           pending_catch: Json | null
           referral_code: string
@@ -166,6 +167,7 @@ export type Database = {
           id: string
           last_ad_at?: string | null
           last_catch_at?: string | null
+          last_catch_result?: Json | null
           level?: number
           pending_catch?: Json | null
           referral_code?: string
@@ -193,6 +195,7 @@ export type Database = {
           id?: string
           last_ad_at?: string | null
           last_catch_at?: string | null
+          last_catch_result?: Json | null
           level?: number
           pending_catch?: Json | null
           referral_code?: string
@@ -293,12 +296,53 @@ export type Database = {
         Args: { _delta: number; _meta?: Json; _reason: string; _user: string }
         Returns: number
       }
+      begin_fishing_cast: {
+        Args: {
+          _bait_id: string
+          _catch_id: string
+          _fish_id: string
+          _kg: number
+          _user: string
+          _world_id: string
+        }
+        Returns: Json
+      }
+      cancel_fishing_cast: {
+        Args: { _catch_id: string; _user: string }
+        Returns: boolean
+      }
+      create_fishing_withdrawal: {
+        Args: { _address: string; _coins: number; _user: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      open_fishing_chest: {
+        Args: {
+          _expected_tier: string
+          _index: number
+          _loot: Json
+          _user: string
+        }
+        Returns: Json
+      }
+      process_fishing_withdrawal: {
+        Args: { _action: string; _id: string; _note: string; _tx_hash: string }
+        Returns: Json
+      }
+      settle_fishing_catch: {
+        Args: {
+          _catch_id: string
+          _rarity: string
+          _user: string
+          _xp_gain: number
+        }
+        Returns: Json
       }
     }
     Enums: {
