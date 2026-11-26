@@ -49,3 +49,18 @@ describe("fishing rules", () => {
     expect(r).toBe("landed");
   });
 });
+
+import { coinsForCatch, coinsToUsd, referralShare } from "./fishing";
+describe("money rules", () => {
+  const rules = { coins_common: 2, coins_rare: 5, coins_epic: 15, coins_legendary: 40, daily_coin_cap: 340, referral_percent: 10 };
+  it("10000 points equal 1 USD, so the 1000 point minimum is 0.10 USD", () => {
+    expect(coinsToUsd(10000, 10000)).toBe(1);
+    expect(coinsToUsd(1000, 10000)).toBe(0.1);
+  });
+  it("referrer gets 10% of a friend's points", () => { expect(referralShare(40, 10)).toBe(4); });
+  it("daily cap stops earning so 1000 points need at least 3 days", () => {
+    expect(coinsForCatch("legendary", rules, 330)).toBe(10);
+    expect(coinsForCatch("common", rules, 340)).toBe(0);
+    expect(Math.ceil(1000 / rules.daily_coin_cap)).toBeGreaterThanOrEqual(3);
+  });
+});

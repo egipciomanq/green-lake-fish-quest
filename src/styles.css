@@ -66,8 +66,8 @@
   --color-rare: var(--rare);
   --color-epic: var(--epic);
   --color-legendary: var(--legendary);
-  --font-display: "Lalezar", system-ui, sans-serif;
-  --font-sans: "Tajawal", system-ui, sans-serif;
+  --font-display: "Lilita One", system-ui, sans-serif;
+  --font-sans: "Nunito", system-ui, sans-serif;
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

@@ -16,6 +16,11 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          ad_cooldown_seconds: number
+          ad_daily_limit: number
+          ad_reward_baits: number
+          ad_reward_coins: number
+          adsgram_block_id: string
           catch_cooldown_seconds: number
           coins_common: number
           coins_epic: number
@@ -35,6 +40,11 @@ export type Database = {
           withdrawals_enabled: boolean
         }
         Insert: {
+          ad_cooldown_seconds?: number
+          ad_daily_limit?: number
+          ad_reward_baits?: number
+          ad_reward_coins?: number
+          adsgram_block_id?: string
           catch_cooldown_seconds?: number
           coins_common?: number
           coins_epic?: number
@@ -54,6 +64,11 @@ export type Database = {
           withdrawals_enabled?: boolean
         }
         Update: {
+          ad_cooldown_seconds?: number
+          ad_daily_limit?: number
+          ad_reward_baits?: number
+          ad_reward_coins?: number
+          adsgram_block_id?: string
           catch_cooldown_seconds?: number
           coins_common?: number
           coins_epic?: number
@@ -111,58 +126,82 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ads_today: number
           baits: Json
           banned: boolean
           chests: Json
           coins: number
+          coins_day: string
+          coins_today: number
           collection: Json
           created_at: string
           display_name: string | null
           id: string
+          last_ad_at: string | null
           last_catch_at: string | null
           level: number
+          pending_catch: Json | null
           referral_code: string
+          referral_earned: number
+          referral_paid: number
           referral_rewarded: boolean
           referred_by: string | null
           telegram_id: number | null
+          total_earned: number
           username: string | null
           world_id: string
           xp: number
         }
         Insert: {
+          ads_today?: number
           baits?: Json
           banned?: boolean
           chests?: Json
           coins?: number
+          coins_day?: string
+          coins_today?: number
           collection?: Json
           created_at?: string
           display_name?: string | null
           id: string
+          last_ad_at?: string | null
           last_catch_at?: string | null
           level?: number
+          pending_catch?: Json | null
           referral_code?: string
+          referral_earned?: number
+          referral_paid?: number
           referral_rewarded?: boolean
           referred_by?: string | null
           telegram_id?: number | null
+          total_earned?: number
           username?: string | null
           world_id?: string
           xp?: number
         }
         Update: {
+          ads_today?: number
           baits?: Json
           banned?: boolean
           chests?: Json
           coins?: number
+          coins_day?: string
+          coins_today?: number
           collection?: Json
           created_at?: string
           display_name?: string | null
           id?: string
+          last_ad_at?: string | null
           last_catch_at?: string | null
           level?: number
+          pending_catch?: Json | null
           referral_code?: string
+          referral_earned?: number
+          referral_paid?: number
           referral_rewarded?: boolean
           referred_by?: string | null
           telegram_id?: number | null
+          total_earned?: number
           username?: string | null
           world_id?: string
           xp?: number

@@ -1,9 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { art } from "@/game/art";
 import { BAITS, type FishDef, type WorldDef } from "@/game/data";
-import { BITE_WINDOW, castBoost, newReel, pickFish, PERFECT_CAST, REEL, stepReel, type ReelState } from "@/game/fishing";
+import { BITE_WINDOW, castBoost, newReel, PERFECT_CAST, REEL, stepReel, type ReelState } from "@/game/fishing";
+import { castLine, landCatch } from "@/lib/game.functions";
+import type { Player } from "@/lib/game.server";
 import { CAST_TIME, createLive, now, type Phase } from "@/game/live";
-import { addXp, type Save } from "@/game/store";
+import type { Save } from "@/game/store";
 import { sfx } from "@/game/sfx";
 import { haptic } from "@/game/telegram";
 import { TopHud } from "./Hud";
@@ -12,11 +14,11 @@ import { Reveal, type RevealData } from "./Reveal";
 const LakeScene = lazy(() => import("@/game/LakeScene").then((m) => ({ default: m.LakeScene })));
 
 const HINT: Record<Phase, string> = {
-  idle: "اضغط مطولاً للرمي", charging: "أفلت للرمي!", casting: "...", waiting: "انتظر الغمزة...",
-  bite: "اسحب الآن!", reeling: "اضغط مطولاً للسحب — أفلت عند الشد", caught: "صيد رائع!", lost: "",
+  idle: "Hold to cast", charging: "Release to cast!", casting: "...", waiting: "Wait for a bite...",
+  bite: "PULL NOW!", reeling: "Hold to reel — release on tension", caught: "Great catch!", lost: "",
 };
 
-export function PlayScreen({ world, save, update, onMute, onReady }: { world: WorldDef; save: Save; update: (fn: (s: Save) => Save) => void; onMute: () => void; onReady: () => void }) {
+export function PlayScreen({ world, save, update, onMute, onReady, onPlayer }: { world: WorldDef; save: Save; update: (fn: (s: Save) => Save) => void; onMute: () => void; onReady: () => void; onPlayer: (p: Player) => void }) {
   const live = useRef(createLive()).current;
   const [phase, setPhaseState] = useState<Phase>("idle");
   const [bait, setBait] = useState("worm");
@@ -42,7 +44,7 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
 
   // ---- charging power meter (ping-pong) ----
   const startCharge = () => {
-    if ((saveRef.current.baits[bait] ?? 0) <= 0) { flash("نفد هذا الطُعم! افتح صندوقاً من الحقيبة"); haptic.error(); return; }
+    if ((saveRef.current.baits[bait] ?? 0) <= 0) { flash("Out of this bait! Open a chest from your bag"); haptic.error(); return; }
     setPhase("charging"); const t0 = now(); let lastTick = 0;
     const loop = () => {
       const t = (now() - t0) / 1.1; const p = 1 - Math.abs((t % 2) - 1);
@@ -59,10 +61,13 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
     const power = Math.max(0.15, live.power); live.castPower = power;
     const perfect = castBoost(power) > 0;
     const boost = (BAITS.find((b) => b.id === bait)?.boost ?? 0) + castBoost(power);
+    void boost;
     update((s) => ({ ...s, baits: { ...s.baits, [bait]: Math.max(0, (s.baits[bait] ?? 0) - 1) } }));
-    setHooked(pickFish(world.fish, boost));
+    castLine({ data: { worldId: world.id, baitId: bait, power } })
+      .then((r) => { const f = world.fish.find((x) => x.id === r.fishId); if (f) setHooked({ fish: f, kg: r.kg }); update((s) => ({ ...s, baits: r.baits })); })
+      .catch((e: Error) => { update((s) => ({ ...s, baits: { ...s.baits, [bait]: (s.baits[bait] ?? 0) + 1 } })); haptic.error(); lose(e.message); });
     setPhase("casting"); sfx.cast(); haptic.light();
-    if (perfect) flash("رمية مثالية! فرصة أعلى للنادر", true);
+    if (perfect) flash("Perfect cast! Higher chance for rare fish", true);
     later(CAST_TIME * 1000, () => {
       sfx.splash(); setPhase("waiting");
       const biteAt = 1800 + Math.random() * 3500;
@@ -70,7 +75,7 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
       for (let i = 0; i < nibbles; i++) later(500 + Math.random() * (biteAt - 700), () => { live.nibbleAt = now(); sfx.nibble(); haptic.light(); });
       later(biteAt, () => {
         setPhase("bite"); sfx.bite(); haptic.heavy();
-        later(BITE_WINDOW * 1000, () => { sfx.escape(); lose("هربت السمكة! اسحب أسرع عند الغمزة"); });
+        later(BITE_WINDOW * 1000, () => { sfx.escape(); lose("The fish got away! Pull faster on bite"); });
       });
     });
   };
@@ -88,8 +93,8 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
       if (live.holding && t - lastTick > 0.07) { lastTick = t; sfx.reel(); }
       if (state.tension > 0.8 && t - lastStrain > 0.22) { lastStrain = t; sfx.strain(); haptic.light(); }
       if (result === "landed") { landed(); return; }
-      if (result === "snapped") { sfx.snap(); haptic.error(); lose("انقطع الخيط! أفلت عندما يشتد الشد"); return; }
-      if (result === "escaped") { sfx.escape(); lose("أفلتت السمكة! اسحب بشكل متواصل"); return; }
+      if (result === "snapped") { sfx.snap(); haptic.error(); lose("Line snapped! Release when tension is high"); return; }
+      if (result === "escaped") { sfx.escape(); lose("The fish escaped! Keep reeling steadily"); return; }
       raf.current = requestAnimationFrame(loop);
     };
     raf.current = requestAnimationFrame(loop);
@@ -97,17 +102,18 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
 
   const landed = () => {
     clear(); setPhase("caught"); sfx.catch(); haptic.success();
-    const h = hookedRef.current; if (!h) return;
-    later(1150, () => {
-      const prev = saveRef.current.catches[h.fish.id];
-      setReveal({ ...h, isNew: !prev, record: !!prev && h.kg > prev.bestKg });
-    });
+    const h = hookedRef.current; if (!h) { lose("Failed to record fish"); return; }
+    const t0 = Date.now();
+    landCatch().then((r) => {
+      onPlayer(r.player);
+      window.setTimeout(() => setReveal({ ...h, isNew: r.isNew, record: r.record, coins: r.coins, capped: r.capped }), Math.max(0, 1150 - (Date.now() - t0)));
+    }).catch((e: Error) => lose(e.message));
   };
 
   const onDown = useCallback(() => {
     sfx.unlock(); if (reveal) return;
     if (live.phase === "idle") startCharge();
-    else if (live.phase === "waiting") { sfx.escape(); lose("مبكراً جداً! أخفت السمكة"); }
+    else if (live.phase === "waiting") { sfx.escape(); lose("Too early! You scared the fish"); }
     else if (live.phase === "bite") startReel();
     else if (live.phase === "reeling") live.holding = true;
   }, [reveal, bait]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -117,11 +123,7 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
   }, [bait]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const collect = () => {
-    if (!reveal) return; const { fish, kg } = reveal;
-    update((s) => {
-      const prev = s.catches[fish.id];
-      return addXp({ ...s, catches: { ...s.catches, [fish.id]: { fishId: fish.id, count: (prev?.count ?? 0) + 1, bestKg: Math.max(prev?.bestKg ?? 0, kg) } } }, fish.xp);
-    });
+    if (!reveal) return;
     sfx.xp(); setReveal(null); setPhase("idle");
   };
 
@@ -142,7 +144,7 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
       {/* power meter */}
       {(phase === "charging") && (
         <div className="pointer-events-none absolute bottom-48 start-4 z-20 flex flex-col items-center gap-1">
-          <span className="font-display text-sm text-primary text-stroke">القوة</span>
+          <span className="font-display text-sm text-primary text-stroke">Power</span>
           <div className="panel relative h-48 w-7 overflow-hidden rounded-full p-1">
             <div className="absolute inset-x-1 top-1 rounded-full bg-accent/40" style={{ height: `${(1 - PERFECT_CAST) * 100}%` }} />
             <div ref={powerBar} className="absolute inset-x-1 bottom-1 rounded-full transition-none data-[perfect=1]:shadow-[0_0_16px_var(--color-accent)]" style={{ height: "0%", background: "var(--gradient-gold)" }} />
@@ -154,11 +156,11 @@ export function PlayScreen({ world, save, update, onMute, onReady }: { world: Wo
       {phase === "reeling" && (
         <div className="pointer-events-none absolute inset-x-6 top-[26%] z-20 space-y-2">
           <div className="panel-glass p-2.5">
-            <div className="mb-1 flex justify-between text-xs font-bold"><span>المسافة</span><span>🐟</span></div>
+            <div className="mb-1 flex justify-between text-xs font-bold"><span>Distance</span><span>🐟</span></div>
             <div className="h-3 overflow-hidden rounded-full bg-muted"><div ref={progressBar} className="h-full rounded-full" style={{ width: "15%", background: "var(--gradient-green)" }} /></div>
           </div>
           <div className="panel-glass p-2.5">
-            <div className="mb-1 flex justify-between text-xs font-bold"><span>شد الخيط</span><span className="text-destructive">خطر</span></div>
+            <div className="mb-1 flex justify-between text-xs font-bold"><span>Line Tension</span><span className="text-destructive">Danger</span></div>
             <div className="relative h-3 overflow-hidden rounded-full bg-muted">
               <div className="absolute inset-y-0 end-0 bg-destructive/40" style={{ width: `${(1 - REEL.SAFE) * 100}%` }} />
               <div ref={tensionBar} className="relative h-full rounded-full bg-primary data-[danger=1]:bg-destructive" style={{ width: "20%" }} />

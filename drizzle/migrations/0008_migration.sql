@@ -1,0 +1,2 @@
+alter table public.profiles add column referral_paid bigint not null default 0;
+comment on column public.profiles.referral_paid is 'Points already paid to this player''s referrer (10% share is computed on cumulative earnings so small catches are not lost to rounding).';

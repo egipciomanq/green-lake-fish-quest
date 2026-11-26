@@ -1,9 +1,10 @@
 import { Volume2, VolumeX } from "lucide-react";
+import { Coins } from "lucide-react";
 import type { Save } from "@/game/store";
 import { xpForLevel } from "@/game/store";
 
 export function DevBadge() {
-  return <span className="rounded-full border border-accent/70 bg-muted/80 px-2 py-0.5 text-[10px] font-bold text-accent">معاينة تطوير</span>;
+  return <span className="rounded-full border border-accent/70 bg-muted/80 px-2 py-0.5 text-[10px] font-bold text-accent">DEV PREVIEW</span>;
 }
 
 export function TopHud({ save, title, onMute }: { save: Save; title?: string; onMute: () => void }) {
@@ -14,16 +15,16 @@ export function TopHud({ save, title, onMute }: { save: Save; title?: string; on
         <div className="panel-glass pointer-events-auto flex flex-1 items-center gap-2 py-1.5 pe-3 ps-1.5">
           <div className="btn-gold grid h-9 w-9 shrink-0 place-items-center rounded-full text-lg">{save.level}</div>
           <div className="min-w-0 flex-1">
-            <div className="flex justify-between text-[11px] font-bold"><span>المستوى {save.level}</span><span className="text-muted-foreground">{save.xp}/{xpForLevel(save.level)} XP</span></div>
+            <div className="flex justify-between text-[11px] font-bold"><span>Level {save.level}</span><span className="text-muted-foreground">{save.xp}/{xpForLevel(save.level)} XP</span></div>
             <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: "var(--gradient-gold)" }} /></div>
           </div>
         </div>
-        <button onClick={onMute} aria-label={save.muted ? "تشغيل الصوت" : "كتم الصوت"} className="panel-glass pointer-events-auto grid h-11 w-11 place-items-center">
+        <button onClick={onMute} aria-label={save.muted ? "Unmute" : "Mute"} className="panel-glass pointer-events-auto grid h-11 w-11 place-items-center">
           {save.muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </button>
       </div>
       {title && <div className="mt-2 flex items-center justify-center gap-2"><div className="ribbon px-7 py-1 text-lg">{title}</div></div>}
-      <div className="mt-1 flex justify-center"><DevBadge /></div>
+      <div className="mt-1 flex justify-center"><span className="panel-glass flex items-center gap-1.5 px-3 py-0.5 font-display text-base text-primary"><Coins className="h-4 w-4" />{save.coins.toLocaleString("en")}</span></div>
     </div>
   );
 }

@@ -70,3 +70,20 @@ export function stepReel(s: ReelState, holding: boolean, dt: number, power: numb
   if (progress <= 0) return { state, result: "escaped" };
   return { state, result: "reeling" };
 }
+
+// ---- Progress & rewards (shared by the server; pure) ----
+export const xpForLevel = (lvl: number) => 100 * lvl;
+export function applyXp(level: number, xp: number, chests: ChestTier[], gain: number) {
+  let cur = xp + gain; const out = [...chests];
+  while (cur >= xpForLevel(level)) { cur -= xpForLevel(level); level++; out.push(chestTierForLevel(level)); }
+  return { level, xp: cur, chests: out };
+}
+export interface RewardRules { coins_common: number; coins_rare: number; coins_epic: number; coins_legendary: number; daily_coin_cap: number; referral_percent: number }
+/** Points for one catch, clipped so a player never passes the daily cap. */
+export function coinsForCatch(rarity: Rarity, r: RewardRules, earnedToday: number): number {
+  const base = { common: r.coins_common, rare: r.coins_rare, epic: r.coins_epic, legendary: r.coins_legendary }[rarity];
+  return Math.max(0, Math.min(base, r.daily_coin_cap - earnedToday));
+}
+export const referralShare = (coins: number, percent: number) => Math.floor((coins * percent) / 100);
+/** USD value of points (2 decimals). */
+export const coinsToUsd = (coins: number, perUsd: number) => Math.floor((coins / perUsd) * 100) / 100;

@@ -33,3 +33,11 @@ use the editor.
 - World look, fish lists and unlock levels are data in src/game/data.ts (WorldTheme drives the scene); 2D art comes from the user's reference sheet via src/game/art.ts CDN pointers. Why: one place to add or retune worlds.
 - Sound is synthesized WebAudio in src/game/sfx.ts; Telegram Mini App hooks (ready/expand/haptics) live in src/game/telegram.ts and are no-ops in a browser. Why: no audio files, works inside and outside Telegram.
 - Gameplay balances are development data persisted in localStorage (src/game/store.ts), always labelled as preview, never as real money. Why: user requirement for Phase 1.
+
+## Project rules
+- Economy is server-authoritative: catches, chests, ads, points, referrals and withdrawals run in `src/lib/game.functions.ts` (service role, after `requireSupabaseAuth`); the client only animates. Why: real money, clients can't be trusted.
+- Point balance changes go through the `add_coins` SQL function (atomic, writes `coin_ledger`). Why: auditable balance history, no negative balances.
+- Tunable numbers (point values, caps, rates, ad rewards, maintenance) live in the single-row `app_settings` table, edited from `/admin`. Why: owner changes economy without code.
+- Players sign in only through verified Telegram initData (`src/lib/auth.functions.ts`, synthetic email + HMAC password); admins sign in with email at `/admin`, role in `user_roles`. Why: Telegram Mini App identity.
+- Bot `/start` is handled by `src/routes/api/public/telegram/webhook.ts`, verified with a secret token derived from the bot token. Why: welcome + Open game button.
+- All UI, copy and code are English, LTR. Pure game rules stay in `src/game/fishing.ts` with tests.

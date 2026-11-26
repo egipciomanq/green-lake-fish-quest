@@ -81,9 +81,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
-      { title: "Fishing World — عالم الصيد" },
+      { title: "FeshFesh" },
       { name: "description", content: "3D fishing game: cast, hook and collect fish across ten worlds." },
-      { property: "og:title", content: "Fishing World — عالم الصيد" },
+      { property: "og:title", content: "FeshFesh" },
       { property: "og:description", content: "3D fishing game: cast, hook and collect fish across ten worlds." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -95,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Lalezar&family=Tajawal:wght@400;700;900&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;700;900&display=swap" },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
     scripts: [{ src: "https://telegram.org/js/telegram-web-app.js" }],
@@ -108,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
