@@ -62,9 +62,8 @@ export const adminProcessWithdrawal = createServerFn({ method: "POST" }).middlew
   .inputValidator((d) => z.object({ id: z.string().uuid(), action: z.enum(["paid", "rejected"]), txHash: z.string().max(100).optional(), note: z.string().max(300).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await requireAdmin(context);
-    const { data: rows } = await db.from("withdrawals").update({ status: data.action, tx_hash: data.txHash ?? null, admin_note: data.note ?? null, processed_at: new Date().toISOString() }).eq("id", data.id).eq("status", "pending").select("user_id, coins");
-    const w = rows?.[0]; if (!w) throw new Error("Request has already been processed");
-    if (data.action === "rejected") await db.rpc("add_coins", { _user: w.user_id, _delta: Number(w.coins), _reason: "withdrawal_refund", _meta: { withdrawal: data.id } });
+    const { error } = await db.rpc("process_fishing_withdrawal", { _id: data.id, _action: data.action, _tx_hash: data.txHash ?? "", _note: data.note ?? "" });
+    if (error) throw new Error(error.message.includes("already_processed") ? "Request has already been processed" : "Could not update the request");
     return { ok: true };
   });
 

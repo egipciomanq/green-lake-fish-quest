@@ -10,7 +10,7 @@ import { InfoLinks } from "@/components/info/InfoPage";
 
 type Wallet = Awaited<ReturnType<typeof getWallet>>;
 const STATUS: Record<string, string> = { pending: "Pending", paid: "Paid", rejected: "Rejected" };
-const REASON: Record<string, string> = { catch: "Catch", referral: "Referral", withdrawal: "Withdrawal", withdrawal_refund: "Withdrawal Refund", admin_adjust: "Admin Adjustment" };
+const REASON: Record<string, string> = { catch: "Catch", referral: "Referral", withdrawal: "Withdrawal", withdrawal_refund: "Withdrawal Refund", admin_adjust: "Admin Adjustment", ad: "Ad Reward" };
 
 function Header({ title, sub }: { title: string; sub: string }) {
   return <div className="mb-4 text-center"><div className="ribbon mx-auto w-fit px-10 py-1.5 text-2xl">{title}</div><p className="mt-2 text-sm text-muted-foreground">{sub}</p></div>;
@@ -115,7 +115,7 @@ export function FriendsScreen({ player, rules }: { player: Player; rules: Rules 
         {w?.referrals.length ? w.referrals.map((r, i) => (
           <div key={i} className="panel-glass flex items-center justify-between p-2.5 text-sm">
             <div><div className="font-bold">{r.name}</div><div className="text-[11px] text-muted-foreground">Level {r.level}</div></div>
-            <div className="text-primary">+{Math.floor((r.earned * rules.referralPercent) / 100)}</div>
+            <div className="text-primary">+{r.paid}</div>
           </div>)) : <div className="panel-glass p-3 text-center text-sm text-muted-foreground">Invite your friends and start earning from their catches</div>}
       </div>
       <div className="mt-8"><InfoLinks /></div>

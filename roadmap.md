@@ -3,6 +3,8 @@
 - [ ] Verify catch rewards and balance ledger are committed together, including referral credit
 - [ ] Verify chest opening, invitation attribution, and withdrawal request/refund behavior
 - [ ] Run authenticated end-to-end checks and document external setup still required
+- [ ] Keep Adsgram rewards disabled until a real Block ID and safe reward verification are configured
+- [ ] Review and integrate Monetag only after confirming the appropriate Telegram Mini App ad format and required setup
 - [x] Real accounts (Telegram auto sign-in + email fallback)
 - [x] Server-side balances, catches, baits, chests (anti-cheat)
 - [x] Referral system (link, rewards)

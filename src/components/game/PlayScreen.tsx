@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { art } from "@/game/art";
 import { BAITS, type FishDef, type WorldDef } from "@/game/data";
 import { BITE_WINDOW, castBoost, newReel, PERFECT_CAST, REEL, stepReel, type ReelState } from "@/game/fishing";
-import { castLine, landCatch } from "@/lib/game.functions";
+import { cancelFishingCast, castLine, landCatch } from "@/lib/game.functions";
 import type { Player } from "@/lib/game.server";
 import { CAST_TIME, createLive, now, type Phase } from "@/game/live";
 import type { Save } from "@/game/store";
@@ -23,7 +23,7 @@ export function PlayScreen({ world, save, update, onMute, onReady, onPlayer }: {
   const [phase, setPhaseState] = useState<Phase>("idle");
   const [bait, setBait] = useState("worm");
   const [toast, setToast] = useState<{ text: string; good?: boolean } | null>(null);
-  const [hooked, setHooked] = useState<{ fish: FishDef; kg: number } | null>(null);
+  const [hooked, setHooked] = useState<{ fish: FishDef; kg: number; catchId: string } | null>(null);
   const [reveal, setReveal] = useState<RevealData | null>(null);
   const timers = useRef<number[]>([]);
   const raf = useRef(0);
@@ -40,7 +40,13 @@ export function PlayScreen({ world, save, update, onMute, onReady, onPlayer }: {
   useEffect(() => { if (import.meta.env.DEV) (window as unknown as { __live: unknown }).__live = live; }, [live]);
   const setPhase = (p: Phase) => { live.phase = p; live.phaseAt = now(); setPhaseState(p); };
   const flash = (text: string, good = false) => { setToast({ text, good }); window.setTimeout(() => setToast(null), 1700); };
-  const lose = (text: string) => { clear(); setPhase("lost"); flash(text); later(900, () => setPhase("idle")); };
+  const castReady = useRef<Promise<boolean> | null>(null);
+  const lose = (text: string) => {
+    clear(); setPhase("lost"); flash(text);
+    const h = hookedRef.current;
+    if (h) { void cancelFishingCast({ data: { catchId: h.catchId } }).catch(() => {}); setHooked(null); }
+    later(900, () => setPhase("idle"));
+  };
 
   // ---- charging power meter (ping-pong) ----
   const startCharge = () => {
@@ -63,9 +69,10 @@ export function PlayScreen({ world, save, update, onMute, onReady, onPlayer }: {
     const boost = (BAITS.find((b) => b.id === bait)?.boost ?? 0) + castBoost(power);
     void boost;
     update((s) => ({ ...s, baits: { ...s.baits, [bait]: Math.max(0, (s.baits[bait] ?? 0) - 1) } }));
-    castLine({ data: { worldId: world.id, baitId: bait, power } })
-      .then((r) => { const f = world.fish.find((x) => x.id === r.fishId); if (f) setHooked({ fish: f, kg: r.kg }); update((s) => ({ ...s, baits: r.baits })); })
-      .catch((e: Error) => { update((s) => ({ ...s, baits: { ...s.baits, [bait]: (s.baits[bait] ?? 0) + 1 } })); haptic.error(); lose(e.message); });
+    setHooked(null); hookedRef.current = null;
+    castReady.current = castLine({ data: { worldId: world.id, baitId: bait, power } })
+      .then((r) => { const f = world.fish.find((x) => x.id === r.fishId); if (!f) throw new Error("Unknown fish"); const h = { fish: f, kg: r.kg, catchId: r.catchId }; hookedRef.current = h; setHooked(h); update((s) => ({ ...s, baits: r.baits })); return true; })
+      .catch((e: Error) => { update((s) => ({ ...s, baits: { ...s.baits, [bait]: (s.baits[bait] ?? 0) + 1 } })); haptic.error(); lose(e.message); return false; });
     setPhase("casting"); sfx.cast(); haptic.light();
     if (perfect) flash("Perfect cast! Higher chance for rare fish", true);
     later(CAST_TIME * 1000, () => {
@@ -73,7 +80,9 @@ export function PlayScreen({ world, save, update, onMute, onReady, onPlayer }: {
       const biteAt = 1800 + Math.random() * 3500;
       const nibbles = Math.floor(Math.random() * 3);
       for (let i = 0; i < nibbles; i++) later(500 + Math.random() * (biteAt - 700), () => { live.nibbleAt = now(); sfx.nibble(); haptic.light(); });
-      later(biteAt, () => {
+      later(biteAt, async () => {
+        if (!(await castReady.current)) return;
+        if (live.phase !== "waiting") return;
         setPhase("bite"); sfx.bite(); haptic.heavy();
         later(BITE_WINDOW * 1000, () => { sfx.escape(); lose("The fish got away! Pull faster on bite"); });
       });
@@ -102,12 +111,12 @@ export function PlayScreen({ world, save, update, onMute, onReady, onPlayer }: {
 
   const landed = () => {
     clear(); setPhase("caught"); sfx.catch(); haptic.success();
-    const h = hookedRef.current; if (!h) { lose("Failed to record fish"); return; }
+    const h = hookedRef.current; if (!h) { lose("The cast was not saved. Please cast again."); return; }
     const t0 = Date.now();
-    landCatch().then((r) => {
-      onPlayer(r.player);
+    landCatch({ data: { catchId: h.catchId } }).then((r) => {
+      onPlayer(r.player); setHooked(null); hookedRef.current = null;
       window.setTimeout(() => setReveal({ ...h, isNew: r.isNew, record: r.record, coins: r.coins, capped: r.capped }), Math.max(0, 1150 - (Date.now() - t0)));
-    }).catch((e: Error) => lose(e.message));
+    }).catch((e: Error) => { clear(); setPhase("lost"); flash(e.message); later(1200, () => setPhase("idle")); });
   };
 
   const onDown = useCallback(() => {
