@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Anchor, Backpack, Fish, Map as MapIcon, Users, Wallet } from "lucide-react";
+import { Anchor, Backpack, Fish, Map as MapIcon, ShieldAlert, Users, Wallet } from "lucide-react";
 import { InfoLinks } from "@/components/info/InfoPage";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WORLDS } from "@/game/data";
 import { useAccount } from "@/game/account";
 import { selectWorld } from "@/lib/game.functions";
 import { art } from "@/game/art";
 import { setMuted, sfx } from "@/game/sfx";
-import { initTelegram } from "@/game/telegram";
+import { initTelegram, telegramProfile } from "@/game/telegram";
 import { PlayScreen } from "@/components/game/PlayScreen";
 import { CollectionScreen, LoadingScreen, WorldsScreen, isUnlocked } from "@/components/game/Screens";
 import { BagScreen } from "@/components/game/BagScreen";
@@ -55,6 +57,9 @@ function GameReady({ acc }: { acc: ReturnType<typeof useAccount> }) {
   const [screen, setScreen] = useState<Screen>("play");
   const [ready, setReady] = useState(false);
   const [started, setStarted] = useState(false);
+  const [fairPlayOpen, setFairPlayOpen] = useState(true);
+  const telegramUser = telegramProfile();
+  const playerName = telegramUser?.name ?? acc.player?.name ?? "Angler";
   useEffect(() => { setMuted(save.muted); }, [save.muted]);
   const world = WORLDS.find((w) => w.id === save.worldId && isUnlocked(w, save)) ?? WORLDS[0]!;
   const toggleMute = () => update((s) => ({ ...s, muted: !s.muted }));
@@ -63,13 +68,28 @@ function GameReady({ acc }: { acc: ReturnType<typeof useAccount> }) {
 
   return (
     <div className="relative mx-auto h-[var(--tg-viewport-stable-height,100dvh)] min-h-[100dvh] w-full max-w-md overflow-hidden bg-deep text-foreground" dir="ltr">
-      {screen === "play" && <PlayScreen key={world.id} world={world} save={save} update={update} onMute={toggleMute} onReady={() => setReady(true)} onPlayer={setPlayer} />}
+      {screen === "play" && <PlayScreen key={world.id} world={world} save={save} update={update} onMute={toggleMute} onReady={() => setReady(true)} onPlayer={setPlayer} playerName={playerName} photoUrl={telegramUser?.photoUrl ?? null} />}
       {screen === "worlds" && <WorldsScreen save={save} onPlay={(id) => { update((s) => ({ ...s, worldId: id })); void selectWorld({ data: { worldId: id } }).catch(() => {}); setScreen("play"); }} />}
       {screen === "collection" && <CollectionScreen save={save} />}
       {screen === "bag" && acc.rules && <BagScreen save={save} onPlayer={(p) => { setPlayer(p); void acc.refresh(); }} rules={acc.rules} adsToday={acc.player?.adsToday ?? 0} />}
       {screen === "wallet" && acc.player && acc.rules && <WalletScreen player={{ ...acc.player, coins: save.coins }} rules={acc.rules} onChanged={() => void acc.refresh()} />}
       {screen === "friends" && acc.player && acc.rules && <FriendsScreen player={acc.player} rules={acc.rules} />}
       {!started && <LoadingScreen ready={ready} onStart={() => { sfx.unlock(); sfx.tap(); setStarted(true); }} />}
+
+      <Dialog open={fairPlayOpen} onOpenChange={setFairPlayOpen}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] border-primary/40 bg-background text-foreground sm:max-w-sm">
+          <DialogHeader className="items-center text-center">
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-destructive/10 text-destructive"><ShieldAlert className="h-6 w-6" /></div>
+            <DialogTitle className="font-display text-2xl">Fair Play Rules</DialogTitle>
+            <DialogDescription className="text-center">Help keep FeshFesh fair for every player.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <div className="panel-glass p-3">One account per person. Multiple accounts are prohibited.</div>
+            <div className="panel-glass p-3">Fake referrals are prohibited. Abuse may lead to suspension and removal of referral rewards.</div>
+          </div>
+          <Button type="button" className="btn-gold w-full" onClick={() => setFairPlayOpen(false)}>I Understand</Button>
+        </DialogContent>
+      </Dialog>
 
       <nav className="pb-safe absolute inset-x-0 bottom-0 z-30 px-2">
         <div className="panel grid grid-cols-6 gap-0.5 p-1">

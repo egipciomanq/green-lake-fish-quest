@@ -1,4 +1,5 @@
 # Phase 2 roadmap
+- [ ] Show each Telegram member's name and profile photo, and show a fair-play notice on every game opening
 - [ ] Audit and repair real gameplay, points, chest, referral, and withdrawal flows before public launch
 - [ ] Verify catch rewards and balance ledger are committed together, including referral credit
 - [ ] Verify chest opening, invitation attribution, and withdrawal request/refund behavior

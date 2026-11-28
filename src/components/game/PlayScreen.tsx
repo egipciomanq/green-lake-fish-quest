@@ -18,7 +18,7 @@ const HINT: Record<Phase, string> = {
   bite: "PULL NOW!", reeling: "Hold to reel — release on tension", caught: "Great catch!", lost: "",
 };
 
-export function PlayScreen({ world, save, update, onMute, onReady, onPlayer }: { world: WorldDef; save: Save; update: (fn: (s: Save) => Save) => void; onMute: () => void; onReady: () => void; onPlayer: (p: Player) => void }) {
+export function PlayScreen({ world, save, update, onMute, onReady, onPlayer, playerName, photoUrl }: { world: WorldDef; save: Save; update: (fn: (s: Save) => Save) => void; onMute: () => void; onReady: () => void; onPlayer: (p: Player) => void; playerName: string; photoUrl: string | null }) {
   const live = useRef(createLive()).current;
   const [phase, setPhaseState] = useState<Phase>("idle");
   const [bait, setBait] = useState("worm");
@@ -146,7 +146,7 @@ export function PlayScreen({ world, save, update, onMute, onReady, onPlayer }: {
       {/* full-screen touch layer */}
       <div className="absolute inset-0 z-10" onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={onUp} onPointerLeave={onUp} onContextMenu={(e) => e.preventDefault()} />
 
-      <TopHud save={save} title={world.name} onMute={onMute} />
+      <TopHud save={save} title={world.name} onMute={onMute} playerName={playerName} photoUrl={photoUrl} />
 
       {toast && <div className={`panel animate-pop absolute inset-x-6 top-[30%] z-20 p-3 text-center text-lg font-bold ${toast.good ? "text-primary" : ""}`}>{toast.text}</div>}
 
